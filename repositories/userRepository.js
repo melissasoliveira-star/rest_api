@@ -20,6 +20,15 @@ async function findUserByEmail(email) {
   return result.rows[0] || null; // Retorna o primeiro resultado ou null
 }
 
+// Retorna usuários cujo nome contenha o termo buscado (case-insensitive)
+async function findUsersByNome(nome) {
+  const result = await db.query(
+    "SELECT * FROM usuarios WHERE nome ILIKE $1 ORDER BY id ASC",
+    [`%${nome}%`],
+  );
+  return result.rows;
+}
+
 // Insere um novo usuário no banco e retorna o registro criado
 async function createUser({ nome, email }) {
   const result = await db.query(
@@ -55,6 +64,7 @@ async function deleteUser(id) {
 // Exporta todas as funções do repositório
 module.exports = {
   findAllUsers,
+  findUsersByNome,
   findUserById,
   findUserByEmail,
   createUser,

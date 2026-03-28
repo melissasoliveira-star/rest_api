@@ -3,11 +3,20 @@ const express = require("express");
 const router = express.Router(); // Cria um roteador isolado do Express
 const userRepo = require("../repositories/userRepository"); // Importa o repositório de usuários
 
-// GET /api/users - Lista todos os usuários
+// GET /api/users?nome=João&email=x - Lista todos, ou filtra por nome e/ou email se informados
 router.get("/", async (req, res) => {
   try {
-    const users = await userRepo.findAllUsers(); // Busca todos os usuários no banco
-    return res.json(users); // Retorna a lista em formato JSON
+    const { nome, email } = req.query;
+    let users;
+    if (nome) {
+      users = await userRepo.findUsersByNome(nome);
+    } else if (email) {
+      users = await userRepo.findUserByEmail(email);
+      users = users ? [users] : [];
+    } else {
+      users = await userRepo.findAllUsers();
+    }
+    return res.json(users);
   } catch (err) {
     console.error("Erro ao buscar usuários:", err);
     res.status(500).send("Erro interno do servidor");
@@ -18,19 +27,6 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const user = await userRepo.findUserById(req.params.id); // Usa o ID da URL
-    if (!user)
-      return res.status(404).json({ message: "Usuário não encontrado" }); // 404 se não existir
-    return res.json(user);
-  } catch (err) {
-    console.error("Erro ao buscar usuário:", err);
-    res.status(500).send("Erro interno do servidor");
-  }
-});
-
-// GET /api/users/filter/:email - Busca um usuário pelo e-mail
-router.get("/filter/:email", async (req, res) => {
-  try {
-    const user = await userRepo.findUserByEmail(req.params.email); // Usa o e-mail da URL
     if (!user)
       return res.status(404).json({ message: "Usuário não encontrado" }); // 404 se não existir
     return res.json(user);
